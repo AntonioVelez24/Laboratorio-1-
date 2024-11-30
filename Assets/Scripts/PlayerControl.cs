@@ -1,9 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UnityEngine.UIElements;
 
 public class PlayerControl : MonoBehaviour
 {
@@ -14,6 +12,12 @@ public class PlayerControl : MonoBehaviour
     private float DirectionY;
 
     private GameObject lastHitObject = null;
+    private SpriteRenderer spriteRenderer;   
+
+    void Start()
+    {
+        spriteRenderer = GetComponent<SpriteRenderer>(); 
+    }
     void Update()
     {
         Vector3 movement = new Vector3(DirectionX, DirectionY, 0) * speed * Time.deltaTime;
@@ -24,9 +28,9 @@ public class PlayerControl : MonoBehaviour
         transform.position = new Vector3(clampedX, clampedY);
         transform.position = transform.position + movement;
 
-        Debug.DrawRay(transform.position, movement.normalized * 1f, Color.red);
+        Debug.DrawRay(transform.position, movement.normalized * 0.5f, Color.red);
 
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, movement.normalized, 1f, gameLayer);
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, movement.normalized, 0.5f, gameLayer);
         if (hit.collider != null && hit.collider.gameObject != lastHitObject)
         {
             Debug.Log("Colisionando con: " + hit.collider.gameObject.name);
@@ -35,13 +39,35 @@ public class PlayerControl : MonoBehaviour
             if (hit.collider.tag == "Color")
             {
                 Debug.Log("Cambiando el Color del jugador");
+                ChangeColor(hit.collider.gameObject);
             }
             else if(hit.collider.tag == "Shape")
             {
                 Debug.Log("Cambiando el Sprite del jugador");
+                ChangeSprite(hit.collider.gameObject);
             }
             lastHitObject = hit.collider.gameObject;
         }
+    }
+    void ChangeSprite(GameObject hitObject)
+    {
+        SpriteRenderer hitSpriteRenderer = hitObject.GetComponent<SpriteRenderer>();
+        if (hitSpriteRenderer != null)
+        {
+            spriteRenderer.sprite = hitSpriteRenderer.sprite;
+        }
+    }
+    void ChangeColor(GameObject hitObject)
+    {
+        SpriteRenderer hitRenderer = hitObject.GetComponent<SpriteRenderer>();
+        if (hitRenderer != null)
+        {
+            spriteRenderer.color = hitRenderer.color;
+        }
+    }
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        lastHitObject = null;
     }
     public void ReadMovementX(InputAction.CallbackContext context)
     {
